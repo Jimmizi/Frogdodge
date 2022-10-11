@@ -1,0 +1,21 @@
+{
+    "files.exclude": {
+        ".gitattributes": true,
+        ".import/": true,
+        ".mono/": true,
+        ".vscode/": true,
+        "*.sln": true,
+        "*.tres": true,
+        "**/*.csproj": true,
+        "**/*.import": true,
+        "**/*.png": true,
+        "**/*.sln": true,
+        "addons/": true,
+        "bgm/": true,
+        "build/": true,
+        "export_presets.cfg": true,
+        "project.godot": true,
+        "sfx/": true,
+        "sprites/": true
+    }
+}
