@@ -38,6 +38,8 @@ public class Player : KinematicBody2D
 		{
 			hopTimerNode.Connect("timeout", this, nameof(OnCooldownExpire));
 		}
+        
+        sprite.Play("idle");
 	}
 	
 	public override void _Draw()
@@ -126,7 +128,7 @@ public class Player : KinematicBody2D
             {
                 Position = hopPositions[iTo];
                 isHopping = false;
-                sprite.Play("idle");
+                sprite.Play("exhausted");
             }
         }
     }
@@ -159,5 +161,6 @@ public class Player : KinematicBody2D
     private void OnCooldownExpire()
     {
         isHopAvailable = true;
+        sprite.Play("idle");
     }
 }
