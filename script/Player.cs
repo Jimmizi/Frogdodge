@@ -1,8 +1,11 @@
 using Godot;
 using System;
 
-public class Player : KinematicBody2D
+public class Player : Area2D
 {
+    [Signal]
+    public delegate void OnEnemyCollide();
+    
 	[Export]
 	public int HopDistance = 120;
 	
@@ -13,6 +16,8 @@ public class Player : KinematicBody2D
     public int ScreenBoundaryPadding = 64;
     	
     private AnimatedSprite sprite;
+    private AnimatedSprite sweatSprite;
+    private Sprite dirSprite;
     
 	private Vector2 screenSize;
 	private Vector2 directionToMouse = new Vector2();
@@ -28,19 +33,46 @@ public class Player : KinematicBody2D
     private Timer hopTimerNode;
     private bool isHopAvailable = true;
 	
+    
+    
 	public override void _Ready()
 	{
 		screenSize = GetViewport().Size;
         sprite = GetNode<AnimatedSprite>("AnimatedSprite");
-        
+        dirSprite = GetNode<Sprite>("Sprite");
+        sweatSprite = GetNode<AnimatedSprite>("Sweat");
         hopTimerNode = GetNode<Timer>("Cooldown");
-		if(hopTimerNode != null)
-		{
-			hopTimerNode.Connect("timeout", this, nameof(OnCooldownExpire));
-		}
+        sprite.Animation = "idle";
         
-        sprite.Play("idle");
+        Hide();
+        SetProcess(false);
+        SetPhysicsProcess(false);
 	}
+        
+    public void Start(Vector2 pos)
+    {
+        SetProcess(true);
+        SetPhysicsProcess(true);
+        
+        sprite.Animation = "idle";
+        
+        isHopping = false;
+        mousePressed = false;
+        hopTimer = 0.0f; 
+        hopRatio = 0.0f;
+        firstZoneFinished = false;
+        isHopAvailable = true;
+        
+        sweatSprite.Visible = false;
+        dirSprite.Visible = true;
+        
+        GetNode<AnimatedSprite>("AnimatedSprite").ZIndex = 0;
+                
+        Position = pos;
+        Show();
+        GetNode<CollisionShape2D>("CollisionShape2D").Disabled = false;
+        
+    }
 	
 	public override void _Draw()
 	{
@@ -68,6 +100,26 @@ public class Player : KinematicBody2D
         else
         {
             mousePressed = false;
+        }
+        
+        dirSprite.Rotation = directionToMouse.Angle();
+        
+        if(!hopTimerNode.IsStopped())
+        {
+            float fPercent = hopTimerNode.TimeLeft / hopTimerNode.WaitTime;
+            
+            if(fPercent > 0.666f)
+            {
+                sweatSprite.Frame = 0;
+            }
+            else if(fPercent > 0.333f)
+            {
+                sweatSprite.Frame = 1;
+            }
+            else
+            {
+                sweatSprite.Frame = 2;
+            }
         }
         
         //Update();
@@ -98,9 +150,9 @@ public class Player : KinematicBody2D
         hopRatio = 0.0f;
         firstZoneFinished = false;
         
-        sprite.Play("jump");
+        sprite.Animation = "jump";
+        Game.PlayFrogHop();
         
-        hopTimerNode.Start();
         isHopAvailable = false;
     }
     
@@ -128,9 +180,26 @@ public class Player : KinematicBody2D
             {
                 Position = hopPositions[iTo];
                 isHopping = false;
-                sprite.Play("exhausted");
+                
+                hopTimerNode.Start();
+                sweatSprite.Visible = true;
+                sweatSprite.Frame = 0;
+                sprite.Animation = "exhausted";
+                
+                var landSprite = GetNode<AnimatedSprite>("LandSprite");
+                landSprite.Visible = true;
+                landSprite.Play();
+                Game.PlayFrogLand();
             }
         }
+    }
+    
+    void OnLandAnimFinished()
+    {
+        var landSprite = GetNode<AnimatedSprite>("LandSprite");
+        landSprite.Visible = false;
+        landSprite.Stop();
+        landSprite.Frame = 0;
     }
     
     Vector2 GetHopApexPosition()
@@ -160,7 +229,32 @@ public class Player : KinematicBody2D
     
     private void OnCooldownExpire()
     {
-        isHopAvailable = true;
-        sprite.Play("idle");
+        if(sprite.Animation != "sadcarried")
+        {
+            isHopAvailable = true;
+            sprite.Animation = "idle";
+            sweatSprite.Visible = false;
+            sweatSprite.Frame = 0;
+        }
+    }
+    
+    private void OnFrogAreaOverlap(PhysicsBody2D body)
+    {
+        GetNode<CollisionShape2D>("CollisionShape2D").SetDeferred("disabled", true);
+        
+        sprite.Animation = "sadcarried";
+        SetProcess(false);
+        SetPhysicsProcess(false);
+        
+        GetNode<AnimatedSprite>("AnimatedSprite").ZIndex = 1;
+        Game.PlayFrogPickup();
+        dirSprite.Visible = false;
+        
+        if(body is Witch w)
+        {
+            w.SetHoldingFrog(this);
+        }
+        
+        EmitSignal(nameof(OnEnemyCollide));
     }
 }

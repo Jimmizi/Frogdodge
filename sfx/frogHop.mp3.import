@@ -1,0 +1,15 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+path="res://.import/frogHop.mp3-948021ea3ce869cdcbe60b997dfa1151.mp3str"
+
+[deps]
+
+source_file="res://sfx/frogHop.mp3"
+dest_files=[ "res://.import/frogHop.mp3-948021ea3ce869cdcbe60b997dfa1151.mp3str" ]
+
+[params]
+
+loop=false
+loop_offset=0
