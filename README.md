@@ -5,4 +5,4 @@ Made in Godot as a tutorial project.
 
 https://jimmizi.itch.io/frogdodge
 
-Using art and audio from the [LD51 gamejam](https://github.com/Jimmizi/Frogwatch) we did: 
+Using art and audio from the [LD51 gamejam](https://github.com/Jimmizi/Frogwatch) we did!
